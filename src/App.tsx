@@ -54,6 +54,10 @@ import { InstallmentsModal } from './components/InstallmentsModal';
 import { MilitaryBondsModal } from './components/MilitaryBondsModal';
 import { ShakeToPayModal } from './components/ShakeToPayModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { GoogleDocsModal } from './components/GoogleDocsModal';
+import { NotificationsDrawer } from './components/NotificationsDrawer';
+import { AdminPanelModal } from './components/AdminPanelModal';
+import { CreditSystemModal } from './components/CreditSystemModal';
 import { CurrencyRatesWidget } from './components/CurrencyRatesWidget';
 import { AnalyticsWidget } from './components/AnalyticsWidget';
 import { AuthScreen } from './components/AuthScreen';
@@ -127,6 +131,10 @@ export default function App() {
   const [isMilitaryBondsOpen, setIsMilitaryBondsOpen] = useState(false);
   const [isShakeToPayOpen, setIsShakeToPayOpen] = useState(false);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+  const [isGoogleDocsOpen, setIsGoogleDocsOpen] = useState(false);
+  const [isNotificationsDrawerOpen, setIsNotificationsDrawerOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [isCreditSystemOpen, setIsCreditSystemOpen] = useState(false);
   const [isCardSettingsOpen, setIsCardSettingsOpen] = useState(false);
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<Transaction | null>(null);
 
@@ -270,6 +278,26 @@ export default function App() {
       })
     );
     setTransactions((prev) => [tx, ...prev]);
+  };
+
+  const handleCreditTopUp = (amount: number, title: string) => {
+    setCards((prev) =>
+      prev.map((c, idx) => (idx === activeCardIndex ? { ...c, balance: c.balance + amount } : c))
+    );
+    const newTx: Transaction = {
+      id: 'CREDIT-' + Date.now().toString().slice(-6),
+      title,
+      merchantName: 'Raiffeisen Premier Credit',
+      category: 'Зарплата',
+      amount,
+      currency: 'UAH',
+      date: 'Сьогодні, ' + new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
+      status: 'SUCCESS',
+      fee: 0,
+      authCode: 'CRD-' + Math.floor(100000 + Math.random() * 900000),
+    };
+    setTransactions((prev) => [newTx, ...prev]);
   };
 
   const handleTopUpJar = (jarId: string, amount: number) => {
@@ -494,6 +522,9 @@ export default function App() {
         onSelectCurrency={setSelectedCurrency}
         balances={balanceMap}
         onOpenCardSettings={() => setIsCardSettingsOpen(true)}
+        onOpenNotificationsDrawer={() => setIsNotificationsDrawerOpen(true)}
+        onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
+        onOpenCreditSystem={() => setIsCreditSystemOpen(true)}
       />
 
       {/* Main Body Layout */}
@@ -501,7 +532,7 @@ export default function App() {
         {/* Top Section: Card & Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Left / 3D Multi-Card Widget (5 cols on lg) */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 animate-float transition-all duration-500 ease-out">
             <CardWidget
               cards={cards}
               activeCardIndex={activeCardIndex}
@@ -534,6 +565,8 @@ export default function App() {
               onOpenShakeToPay={() => setIsShakeToPayOpen(true)}
               onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
               onOpenCardSettings={() => setIsCardSettingsOpen(true)}
+              onOpenGoogleDocs={() => setIsGoogleDocsOpen(true)}
+              onOpenCreditSystem={() => setIsCreditSystemOpen(true)}
               cashbackTotalAvailable={totalCashbackAvailable}
               jarsCount={jars.length}
             />
@@ -807,6 +840,48 @@ export default function App() {
         user={user}
         transactions={transactions}
         uahBalance={balanceMap.UAH || 0}
+      />
+
+      <GoogleDocsModal
+        isOpen={isGoogleDocsOpen}
+        onClose={() => setIsGoogleDocsOpen(false)}
+        isDarkMode={isDarkMode}
+        user={user}
+        transactions={transactions}
+        uahBalance={balanceMap.UAH || 0}
+        onShowToast={showToast}
+      />
+
+      <NotificationsDrawer
+        isOpen={isNotificationsDrawerOpen}
+        onClose={() => setIsNotificationsDrawerOpen(false)}
+        isDarkMode={isDarkMode}
+        onShowToast={showToast}
+      />
+
+      <AdminPanelModal
+        isOpen={isAdminPanelOpen}
+        onClose={() => setIsAdminPanelOpen(false)}
+        isDarkMode={isDarkMode}
+        cards={cards}
+        transactions={transactions}
+        user={user}
+        onUpdateCards={setCards}
+        onUpdateTransactions={setTransactions}
+        onUpdateUser={setUser}
+        onShowToast={showToast}
+      />
+
+      <CreditSystemModal
+        isOpen={isCreditSystemOpen}
+        onClose={() => setIsCreditSystemOpen(false)}
+        isDarkMode={isDarkMode}
+        cards={cards}
+        uahBalance={balanceMap.UAH || 0}
+        onTopUpBalance={(amt, title) => {
+          handleCreditTopUp(amt, title);
+        }}
+        onShowToast={showToast}
       />
 
       <CardSettingsModal

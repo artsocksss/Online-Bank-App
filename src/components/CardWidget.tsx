@@ -299,7 +299,7 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
             <div className="w-full h-10 bg-neutral-950 mt-4 shadow-inner" />
 
             {/* CVV & Signature Area */}
-            <div className="px-6 py-2">
+            <div className="px-6 py-2 space-y-2">
               <div className="bg-white/90 text-neutral-900 rounded p-2 flex justify-between items-center font-mono">
                 <span className="text-[10px] text-neutral-500 italic">Служба підтримки 0 800 500 500</span>
                 <div className="flex items-center gap-2">
@@ -309,7 +309,22 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
                   </span>
                 </div>
               </div>
-              <p className="text-[9px] opacity-70 text-center mt-2">
+
+              {/* Custom PIN Code & 3D-Secure Controls on Card Back */}
+              <div className="flex items-center justify-between text-[10px] bg-black/40 backdrop-blur-xs p-2 rounded-xl text-white font-mono border border-white/20">
+                <span>PIN-код: <strong className="text-[#EEAA00]">{card.pinCode || '4024'}</strong></span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenCardSettings();
+                  }}
+                  className="px-2 py-0.5 rounded bg-[#EEAA00] text-black font-extrabold hover:bg-yellow-300 transition cursor-pointer"
+                >
+                  Змінити PIN / 3DS
+                </button>
+              </div>
+
+              <p className="text-[9px] opacity-70 text-center mt-1">
                 АТ «Райффайзен Банк». Ліцензія НБУ №10 від 18.06.2018. Захищено 3D-Secure 2.0
               </p>
             </div>

@@ -25,3 +25,17 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(238, 170, 0, 0.4);
 }
+
+/* Floating animation effect for 3D multi-card widget */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(0.3deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}

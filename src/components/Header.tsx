@@ -23,6 +23,9 @@ interface HeaderProps {
   onSelectCurrency: (c: Currency) => void;
   balances: Record<Currency, number>;
   onOpenCardSettings: () => void;
+  onOpenNotificationsDrawer: () => void;
+  onOpenAdminPanel: () => void;
+  onOpenCreditSystem: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -34,6 +37,9 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectCurrency,
   balances,
   onOpenCardSettings,
+  onOpenNotificationsDrawer,
+  onOpenAdminPanel,
+  onOpenCreditSystem,
 }) => {
   const [showManagerModal, setShowManagerModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -121,53 +127,29 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* Notification Bell */}
-            <div className="relative">
-              <button
-                id="btn-notifications"
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-2.5 rounded-xl border transition cursor-pointer relative ${
-                  isDarkMode
-                    ? 'border-neutral-800 bg-neutral-900/70 hover:bg-neutral-800 text-neutral-300'
-                    : 'border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700'
-                }`}
-                title="Сповіщення"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EEAA00] rounded-full animate-pulse" />
-              </button>
+            <button
+              id="btn-notifications"
+              onClick={onOpenNotificationsDrawer}
+              className={`p-2.5 rounded-xl border transition cursor-pointer relative ${
+                isDarkMode
+                  ? 'border-neutral-800 bg-neutral-900/70 hover:bg-neutral-800 text-neutral-300'
+                  : 'border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700'
+              }`}
+              title="Центр сповіщень (Свайп-видалення)"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EEAA00] rounded-full animate-pulse" />
+            </button>
 
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <div
-                  className={`absolute right-0 mt-2 w-80 rounded-2xl border shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150 ${
-                    isDarkMode ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-white border-neutral-200 text-neutral-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-neutral-800">
-                    <span className="font-bold text-xs uppercase tracking-wider text-neutral-400">Сповіщення банку</span>
-                    <span className="text-[10px] text-[#EEAA00] font-medium cursor-pointer hover:underline">
-                      Очистити всі
-                    </span>
-                  </div>
-                  <div className="space-y-2.5">
-                    {notifications.map((n) => (
-                      <div
-                        key={n.id}
-                        className={`p-2.5 rounded-xl text-xs flex gap-2.5 items-start ${
-                          isDarkMode ? 'bg-neutral-950/60' : 'bg-neutral-50'
-                        }`}
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-[#EEAA00] shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium leading-relaxed">{n.text}</p>
-                          <span className="text-[10px] text-neutral-500 mt-1 block">{n.time}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Admin Panel Trigger Pill */}
+            <button
+              id="btn-admin-panel"
+              onClick={onOpenAdminPanel}
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500/20 text-[#EEAA00] border border-amber-500/30 text-xs font-black hover:bg-amber-500/30 transition cursor-pointer flex items-center gap-1"
+              title="Адмін-панель керування"
+            >
+              <span>АДМІН</span>
+            </button>
 
             {/* Theme Toggle */}
             <button

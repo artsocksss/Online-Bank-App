@@ -3,6 +3,7 @@ import {
   ArrowLeftRight,
   Bot,
   CreditCard,
+  FileText,
   Gift,
   HeartHandshake,
   Landmark,
@@ -29,6 +30,8 @@ interface QuickActionsProps {
   onOpenShakeToPay: () => void;
   onOpenAiAssistant: () => void;
   onOpenCardSettings: () => void;
+  onOpenGoogleDocs?: () => void;
+  onOpenCreditSystem?: () => void;
   cashbackTotalAvailable: number;
   jarsCount: number;
 }
@@ -45,6 +48,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onOpenShakeToPay,
   onOpenAiAssistant,
   onOpenCardSettings,
+  onOpenGoogleDocs,
+  onOpenCreditSystem,
   cashbackTotalAvailable,
   jarsCount,
 }) => {
@@ -91,6 +96,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       onClick: onOpenInstallments,
       badge: '0.01%',
       color: 'text-purple-400',
+    },
+    {
+      id: 'creditSystem',
+      label: 'Кредити',
+      sub: 'Готівкою за 1 хв',
+      icon: CreditCard,
+      onClick: () => onOpenCreditSystem?.(),
+      badge: 'ТОП',
+      color: 'text-emerald-400',
     },
     {
       id: 'bonds',
@@ -151,6 +165,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       icon: ShieldCheck,
       onClick: onOpenCardSettings,
       color: 'text-emerald-400',
+    },
+    {
+      id: 'googleDocs',
+      label: 'Google Docs',
+      sub: 'Виписки & Звіти',
+      icon: FileText,
+      onClick: () => onOpenGoogleDocs?.(),
+      badge: 'Docs',
+      color: 'text-blue-400',
     },
   ];
 
