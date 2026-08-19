@@ -1,0 +1,6 @@
+{
+  "name": "Raiffeisen Premium Banking",
+  "description": "Український преміум банкінг: перекази за карткою та IBAN, накопичувальні Банки, обмін валют, кешбек, безпека карток та фіскальні PDF квитанції",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
