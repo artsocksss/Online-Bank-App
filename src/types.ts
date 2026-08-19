@@ -1,7 +1,7 @@
 export type Currency = 'UAH' | 'USD' | 'EUR' | 'PLN' | 'GBP';
 
-export type CardTier = 'Premier World Elite' | 'Visa Infinite' | 'єПідтримка' | 'ФОП IT Business' | 'Platinum Credit';
-export type CardSkin = 'gold-titanium' | 'obsidian-black' | 'cyber-neon' | 'patriotic-yellow-blue' | 'emerald-luxury';
+export type CardTier = 'Premier World Elite' | 'Visa Infinite' | 'єПідтримка' | 'ФОП IT Business' | 'Platinum Credit' | 'Raiffeisen Yellow Premier';
+export type CardSkin = 'gold-titanium' | 'obsidian-black' | 'cyber-neon' | 'patriotic-yellow-blue' | 'emerald-luxury' | 'raif-yellow' | 'titanium-credit';
 
 export interface BankCard {
   id: string;
@@ -167,6 +167,7 @@ export interface FxRate {
 
 export interface UserProfile {
   name: string;
+  avatarUrl?: string;
   taxNumber: string; // РНОКПП (ІПН)
   phone: string;
   email: string;
@@ -178,4 +179,17 @@ export interface UserProfile {
     phone: string;
     avatar: string;
   };
+}
+
+export interface ScheduledDebit {
+  id: string;
+  title: string;
+  merchant: string;
+  amount: number;
+  currency: Currency;
+  period: 'Щомісяця' | 'Щотижня' | 'Щодня';
+  nextDebitDate: string;
+  category: TransactionCategory;
+  isActive: boolean;
+  icon: string;
 }

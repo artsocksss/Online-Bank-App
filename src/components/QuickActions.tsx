@@ -9,6 +9,7 @@ import {
   Landmark,
   Radio,
   Receipt,
+  Repeat,
   RotateCcw,
   Shield,
   ShieldCheck,
@@ -32,6 +33,7 @@ interface QuickActionsProps {
   onOpenCardSettings: () => void;
   onOpenGoogleDocs?: () => void;
   onOpenCreditSystem?: () => void;
+  onOpenScheduledDebits?: () => void;
   cashbackTotalAvailable: number;
   jarsCount: number;
 }
@@ -50,6 +52,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onOpenCardSettings,
   onOpenGoogleDocs,
   onOpenCreditSystem,
+  onOpenScheduledDebits,
   cashbackTotalAvailable,
   jarsCount,
 }) => {
@@ -157,6 +160,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       onClick: onOpenAiAssistant,
       badge: 'AI',
       color: 'text-cyan-400',
+    },
+    {
+      id: 'scheduledDebits',
+      label: 'Автоплатежі',
+      sub: 'Push & Списання',
+      icon: Repeat,
+      onClick: () => onOpenScheduledDebits?.(),
+      badge: 'PUSH',
+      color: 'text-amber-400',
     },
     {
       id: 'security',

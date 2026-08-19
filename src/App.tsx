@@ -27,6 +27,7 @@ import {
   Currency,
   InstallmentPlan,
   MilitaryBond,
+  ScheduledDebit,
   Transaction,
   UserProfile,
 } from './types';
@@ -35,6 +36,7 @@ import {
   INITIAL_CASHBACK_CATEGORIES,
   INITIAL_INSTALLMENTS,
   INITIAL_JARS,
+  INITIAL_SCHEDULED_DEBITS,
   INITIAL_TRANSACTIONS,
   INITIAL_USER,
   MILITARY_BONDS_LIST,
@@ -58,6 +60,11 @@ import { GoogleDocsModal } from './components/GoogleDocsModal';
 import { NotificationsDrawer } from './components/NotificationsDrawer';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { CreditSystemModal } from './components/CreditSystemModal';
+import { ScheduledDebitsModal } from './components/ScheduledDebitsModal';
+import { AddCardModal } from './components/AddCardModal';
+import { UserProfileModal } from './components/UserProfileModal';
+import { PwaGuideModal } from './components/PwaGuideModal';
+import { DynamicIsland, DynamicIslandData } from './components/DynamicIsland';
 import { CurrencyRatesWidget } from './components/CurrencyRatesWidget';
 import { AnalyticsWidget } from './components/AnalyticsWidget';
 import { AuthScreen } from './components/AuthScreen';
@@ -77,7 +84,10 @@ export default function App() {
   });
 
   // User Profile
-  const [user, setUser] = useState<UserProfile>(INITIAL_USER);
+  const [user, setUser] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('raif_user');
+    return saved ? JSON.parse(saved) : INITIAL_USER;
+  });
 
   // Cards State (Multi-card)
   const [cards, setCards] = useState<BankCard[]>(() => {
@@ -119,6 +129,22 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_CASHBACK_CATEGORIES;
   });
 
+  // Scheduled debits state
+  const [scheduledDebits, setScheduledDebits] = useState<ScheduledDebit[]>(() => {
+    const saved = localStorage.getItem('raif_debits');
+    return saved ? JSON.parse(saved) : INITIAL_SCHEDULED_DEBITS;
+  });
+  const [isScheduledDebitsOpen, setIsScheduledDebitsOpen] = useState(false);
+
+  // Dynamic Island Push State
+  const [islandData, setIslandData] = useState<DynamicIslandData>({
+    mode: 'compact',
+    title: 'MyRaif Core OS',
+  });
+
+  // Auto-debit loop simulation state
+  const [isAutoLoopActive, setIsAutoLoopActive] = useState(false);
+
   // Modals state
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [transferInitialMode, setTransferInitialMode] = useState<'CARD' | 'IBAN'>('CARD');
@@ -136,6 +162,9 @@ export default function App() {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isCreditSystemOpen, setIsCreditSystemOpen] = useState(false);
   const [isCardSettingsOpen, setIsCardSettingsOpen] = useState(false);
+  const [isAddCardOpen, setIsAddCardOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPwaGuideOpen, setIsPwaGuideOpen] = useState(false);
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<Transaction | null>(null);
 
   // Transaction Search & Filter state
@@ -163,6 +192,10 @@ export default function App() {
   }, [isLoggedIn]);
 
   useEffect(() => {
+    localStorage.setItem('raif_user', JSON.stringify(user));
+  }, [user]);
+
+  useEffect(() => {
     localStorage.setItem('raif_theme', isDarkMode ? 'dark' : 'light');
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -170,6 +203,22 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  const handleAddCard = (newCard: BankCard) => {
+    setCards((prev) => [newCard, ...prev]);
+    setActiveCardIndex(0);
+  };
+
+  const handleDeleteCard = (cardId: string) => {
+    setCards((prev) => {
+      const filtered = prev.filter((c) => c.id !== cardId);
+      if (activeCardIndex >= filtered.length) {
+        setActiveCardIndex(Math.max(0, filtered.length - 1));
+      }
+      return filtered;
+    });
+    showToast('Картку успішно видалено / вилучено з акаунту', 'info');
+  };
 
   useEffect(() => {
     localStorage.setItem('raif_cards', JSON.stringify(cards));
@@ -194,6 +243,21 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('raif_cashback', JSON.stringify(cashbackCategories));
   }, [cashbackCategories]);
+
+  useEffect(() => {
+    localStorage.setItem('raif_debits', JSON.stringify(scheduledDebits));
+  }, [scheduledDebits]);
+
+  useEffect(() => {
+    if (!isAutoLoopActive) return;
+    const interval = setInterval(() => {
+      if (scheduledDebits.length > 0) {
+        const randomDebit = scheduledDebits[Math.floor(Math.random() * scheduledDebits.length)];
+        handleTriggerSimulatedDebit(randomDebit);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [isAutoLoopActive, scheduledDebits, activeCardIndex]);
 
   // Active card
   const activeCard = cards[activeCardIndex] || cards[0];
@@ -278,6 +342,60 @@ export default function App() {
       })
     );
     setTransactions((prev) => [tx, ...prev]);
+  };
+
+  const handleTriggerSimulatedDebit = (debit: ScheduledDebit) => {
+    // 1. Deduct from active card
+    setCards((prev) =>
+      prev.map((c, idx) =>
+        idx === activeCardIndex ? { ...c, balance: Math.max(0, c.balance - debit.amount) } : c
+      )
+    );
+
+    // 2. Add transaction record
+    const newTx: Transaction = {
+      id: 'DEBIT-' + Date.now().toString().slice(-6),
+      title: debit.title,
+      merchantName: debit.merchant,
+      category: debit.category,
+      amount: -debit.amount,
+      currency: debit.currency,
+      date: 'Сьогодні, ' + new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
+      status: 'SUCCESS',
+      fee: 0,
+      authCode: 'AUTO-' + Math.floor(100000 + Math.random() * 900000),
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+
+    // 3. Show Dynamic Island Push Notification
+    setIslandData({
+      mode: 'expanded',
+      title: `Автосписання: ${debit.title}`,
+      subtitle: `${debit.merchant} • ${activeCard.name}`,
+      amount: formatCurrency(-debit.amount, debit.currency),
+      icon: 'repeat',
+    });
+
+    setTimeout(() => {
+      setIslandData({ mode: 'compact', title: 'MyRaif Core OS' });
+    }, 5000);
+
+    showToast(`Автосписання ${formatCurrency(debit.amount, debit.currency)} успішно проведене`, 'success');
+  };
+
+  const handleToggleDebit = (debitId: string) => {
+    setScheduledDebits((prev) =>
+      prev.map((d) => (d.id === debitId ? { ...d, isActive: !d.isActive } : d))
+    );
+  };
+
+  const handleAddDebit = (newDebit: ScheduledDebit) => {
+    setScheduledDebits((prev) => [newDebit, ...prev]);
+  };
+
+  const handleDeleteDebit = (debitId: string) => {
+    setScheduledDebits((prev) => prev.filter((d) => d.id !== debitId));
   };
 
   const handleCreditTopUp = (amount: number, title: string) => {
@@ -506,6 +624,12 @@ export default function App() {
         isDarkMode ? 'bg-[#0E0F12] text-neutral-100' : 'bg-neutral-50 text-neutral-900'
       }`}
     >
+      {/* Dynamic Island Header Overlay */}
+      <DynamicIsland
+        data={islandData}
+        onClear={() => setIslandData({ mode: 'compact', title: 'MyRaif Core OS' })}
+      />
+
       {/* Toast Manager */}
       <Toast toasts={toasts} onDismiss={dismissToast} />
 
@@ -525,6 +649,8 @@ export default function App() {
         onOpenNotificationsDrawer={() => setIsNotificationsDrawerOpen(true)}
         onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
         onOpenCreditSystem={() => setIsCreditSystemOpen(true)}
+        onOpenProfileModal={() => setIsProfileOpen(true)}
+        onOpenPwaGuideModal={() => setIsPwaGuideOpen(true)}
       />
 
       {/* Main Body Layout */}
@@ -540,6 +666,8 @@ export default function App() {
               onToggleFreeze={handleToggleFreezeCard}
               onChangeSkin={handleChangeCardSkin}
               onOpenCardSettings={() => setIsCardSettingsOpen(true)}
+              onAddNewCard={() => setIsAddCardOpen(true)}
+              onDeleteCard={handleDeleteCard}
               onShowToast={showToast}
               isDarkMode={isDarkMode}
             />
@@ -567,6 +695,7 @@ export default function App() {
               onOpenCardSettings={() => setIsCardSettingsOpen(true)}
               onOpenGoogleDocs={() => setIsGoogleDocsOpen(true)}
               onOpenCreditSystem={() => setIsCreditSystemOpen(true)}
+              onOpenScheduledDebits={() => setIsScheduledDebitsOpen(true)}
               cashbackTotalAvailable={totalCashbackAvailable}
               jarsCount={jars.length}
             />
@@ -884,6 +1013,21 @@ export default function App() {
         onShowToast={showToast}
       />
 
+      <ScheduledDebitsModal
+        isOpen={isScheduledDebitsOpen}
+        onClose={() => setIsScheduledDebitsOpen(false)}
+        isDarkMode={isDarkMode}
+        scheduledDebits={scheduledDebits}
+        activeCard={activeCard}
+        onToggleDebit={handleToggleDebit}
+        onAddDebit={handleAddDebit}
+        onDeleteDebit={handleDeleteDebit}
+        onTriggerSimulatedDebit={handleTriggerSimulatedDebit}
+        isAutoLoopActive={isAutoLoopActive}
+        onToggleAutoLoop={() => setIsAutoLoopActive(!isAutoLoopActive)}
+        onShowToast={showToast}
+      />
+
       <CardSettingsModal
         isOpen={isCardSettingsOpen}
         onClose={() => setIsCardSettingsOpen(false)}
@@ -905,6 +1049,30 @@ export default function App() {
       <TransactionReceiptModal
         tx={selectedReceiptTx}
         onClose={() => setSelectedReceiptTx(null)}
+        isDarkMode={isDarkMode}
+        onShowToast={showToast}
+      />
+
+      <AddCardModal
+        isOpen={isAddCardOpen}
+        onClose={() => setIsAddCardOpen(false)}
+        isDarkMode={isDarkMode}
+        onAddCard={handleAddCard}
+        onShowToast={showToast}
+      />
+
+      <UserProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        isDarkMode={isDarkMode}
+        user={user}
+        onUpdateUser={setUser}
+        onShowToast={showToast}
+      />
+
+      <PwaGuideModal
+        isOpen={isPwaGuideOpen}
+        onClose={() => setIsPwaGuideOpen(false)}
         isDarkMode={isDarkMode}
         onShowToast={showToast}
       />

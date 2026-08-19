@@ -12,16 +12,19 @@ import {
   Layers,
   Lock,
   Palette,
+  Plus,
   RotateCw,
   Shield,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Trash2,
   Unlock,
   Wifi,
 } from 'lucide-react';
 import { BankCard, CardSkin } from '../types';
 import { formatCurrency, formatIban } from '../utils/formatters';
+import { RaifLogo } from './RaifLogo';
 
 interface CardWidgetProps {
   cards: BankCard[];
@@ -30,6 +33,8 @@ interface CardWidgetProps {
   onToggleFreeze: (cardId: string) => void;
   onChangeSkin: (cardId: string, skin: CardSkin) => void;
   onOpenCardSettings: () => void;
+  onAddNewCard?: () => void;
+  onDeleteCard?: (cardId: string) => void;
   onShowToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
   isDarkMode: boolean;
 }
@@ -41,6 +46,8 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
   onToggleFreeze,
   onChangeSkin,
   onOpenCardSettings,
+  onAddNewCard,
+  onDeleteCard,
   onShowToast,
   isDarkMode,
 }) => {
@@ -86,6 +93,10 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
   // Card Skins definition
   const getSkinClasses = (skin: CardSkin) => {
     switch (skin) {
+      case 'raif-yellow':
+        return 'bg-gradient-to-tr from-yellow-500 via-[#EEAA00] to-amber-200 text-black border-amber-400/60 shadow-amber-500/30';
+      case 'titanium-credit':
+        return 'bg-gradient-to-tr from-slate-900 via-slate-800 to-zinc-600 text-white border-slate-500/50 shadow-slate-900/40';
       case 'gold-titanium':
         return 'bg-gradient-to-tr from-amber-600 via-[#EEAA00] to-yellow-200 text-black border-amber-300/40 shadow-amber-500/20';
       case 'obsidian-black':
@@ -101,7 +112,7 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
     }
   };
 
-  const isLightSkin = card.skin === 'gold-titanium';
+  const isLightSkin = card.skin === 'gold-titanium' || card.skin === 'raif-yellow';
 
   return (
     <div className="space-y-4">
@@ -128,6 +139,17 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
               <span className="opacity-70 font-mono text-[10px]">{c.cardMask.slice(-4)}</span>
             </button>
           ))}
+
+          {onAddNewCard && (
+            <button
+              onClick={onAddNewCard}
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[#EEAA00] text-xs font-bold hover:bg-amber-500/20 transition whitespace-nowrap cursor-pointer flex items-center gap-1"
+              title="Відкрити нову картку"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Нова</span>
+            </button>
+          )}
         </div>
 
         {/* Carousel Prev/Next Arrows */}
@@ -393,10 +415,12 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
               Закрити
             </button>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
             {[
+              { id: 'raif-yellow', name: 'Raif Yellow', color: 'bg-[#EEAA00]' },
               { id: 'gold-titanium', name: 'Gold Titanium', color: 'bg-amber-500' },
               { id: 'obsidian-black', name: 'Obsidian Black', color: 'bg-neutral-900 border border-neutral-700' },
+              { id: 'titanium-credit', name: 'Titanium Credit', color: 'bg-slate-700' },
               { id: 'emerald-luxury', name: 'Emerald Luxe', color: 'bg-emerald-600' },
               { id: 'patriotic-yellow-blue', name: 'UA Flag', color: 'bg-gradient-to-r from-blue-600 to-yellow-400' },
               { id: 'cyber-neon', name: 'Cyber Neon', color: 'bg-gradient-to-r from-purple-600 to-cyan-400' },
@@ -430,14 +454,30 @@ export const CardWidget: React.FC<CardWidgetProps> = ({
               {formatCurrency(card.balance, card.currency)}
             </p>
           </div>
-          <button
-            onClick={() => handleCopy(card.iban, 'IBAN')}
-            className="px-3 py-1.5 rounded-xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-xs font-mono font-bold text-[#EEAA00] transition cursor-pointer flex items-center gap-1.5"
-            title="Копіювати повний рахунок IBAN"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            <span>IBAN</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleCopy(card.iban, 'IBAN')}
+              className="px-3 py-1.5 rounded-xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-xs font-mono font-bold text-[#EEAA00] transition cursor-pointer flex items-center gap-1.5"
+              title="Копіювати повний рахунок IBAN"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>IBAN</span>
+            </button>
+
+            {cards.length > 1 && onDeleteCard && (
+              <button
+                onClick={() => {
+                  if (confirm(`Ви впевнені, що хочете видалити/закрити картку ${card.name}?`)) {
+                    onDeleteCard(card.id);
+                  }
+                }}
+                className="p-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition cursor-pointer"
+                title="Видалити картку"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Credit Limit & Grace Period (if applicable) */}

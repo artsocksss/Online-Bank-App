@@ -4,15 +4,18 @@ import {
   CheckCircle2,
   ChevronDown,
   CreditCard,
+  Key,
   LogOut,
   Moon,
   PhoneCall,
   ShieldCheck,
+  Smartphone,
   Sun,
   User,
 } from 'lucide-react';
 import { Currency, UserProfile } from '../types';
 import { formatCurrency } from '../utils/formatters';
+import { RaifLogo } from './RaifLogo';
 
 interface HeaderProps {
   user: UserProfile;
@@ -26,6 +29,8 @@ interface HeaderProps {
   onOpenNotificationsDrawer: () => void;
   onOpenAdminPanel: () => void;
   onOpenCreditSystem: () => void;
+  onOpenProfileModal?: () => void;
+  onOpenPwaGuideModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -40,6 +45,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotificationsDrawer,
   onOpenAdminPanel,
   onOpenCreditSystem,
+  onOpenProfileModal,
+  onOpenPwaGuideModal,
 }) => {
   const [showManagerModal, setShowManagerModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -62,13 +69,17 @@ export const Header: React.FC<HeaderProps> = ({
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           {/* Logo & Bank Title */}
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 bg-[#EEAA00] text-black font-black text-xl flex items-center justify-center rounded-xl shadow-lg shadow-[#EEAA00]/20 select-none">
-              R
-            </div>
+          <div
+            className="flex items-center gap-3.5 cursor-pointer group"
+            onClick={onOpenAdminPanel}
+            title="Потайний вхід у Raif Enterprise Admin Engine"
+          >
+            <RaifLogo size="md" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg tracking-tight">Raiffeisen</span>
+                <span className="font-extrabold text-lg tracking-tight group-hover:text-[#EEAA00] transition">
+                  Raiffeisen
+                </span>
                 <span className="text-xs px-2 py-0.5 rounded-md font-semibold bg-[#EEAA00]/15 text-[#EEAA00] border border-[#EEAA00]/30 uppercase tracking-wide">
                   Premier
                 </span>
@@ -141,6 +152,23 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EEAA00] rounded-full animate-pulse" />
             </button>
 
+            {/* PWA iOS Install & API Keys Guide Button */}
+            {onOpenPwaGuideModal && (
+              <button
+                id="btn-pwa-guide"
+                onClick={onOpenPwaGuideModal}
+                className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center gap-1 text-xs font-bold ${
+                  isDarkMode
+                    ? 'border-neutral-800 bg-neutral-900/70 hover:bg-neutral-800 text-sky-400'
+                    : 'border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-sky-600'
+                }`}
+                title="Додати на екран iPhone (PWA & Ключі API)"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span className="hidden xl:inline text-[11px]">iOS PWA</span>
+              </button>
+            )}
+
             {/* Admin Panel Trigger Pill */}
             <button
               id="btn-admin-panel"
@@ -148,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="px-2.5 py-1.5 rounded-xl bg-amber-500/20 text-[#EEAA00] border border-amber-500/30 text-xs font-black hover:bg-amber-500/30 transition cursor-pointer flex items-center gap-1"
               title="Адмін-панель керування"
             >
-              <span>АДМІН</span>
+              <span>150 FPS АДМІН</span>
             </button>
 
             {/* Theme Toggle */}
@@ -167,15 +195,25 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* User Profile Pill */}
             <div
-              className={`flex items-center gap-2.5 pl-3 pr-2 py-1.5 rounded-xl border ${
+              onClick={onOpenProfileModal}
+              className={`flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 rounded-xl border cursor-pointer hover:border-[#EEAA00]/50 transition ${
                 isDarkMode
                   ? 'border-neutral-800 bg-neutral-900/90 text-white'
                   : 'border-neutral-200 bg-neutral-50 text-neutral-900'
               }`}
+              title="Налаштування профілю клієнта"
             >
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#EEAA00] to-amber-300 text-black flex items-center justify-center font-bold text-xs shadow-inner">
-                {user.name.charAt(0)}
-              </div>
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  className="w-7 h-7 rounded-lg object-cover border border-[#EEAA00]/60 shadow-xs"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#EEAA00] to-amber-300 text-black flex items-center justify-center font-bold text-xs shadow-inner">
+                  {user.name.charAt(0)}
+                </div>
+              )}
               <div className="hidden sm:block text-left pr-1">
                 <p className="text-xs font-bold leading-none">{user.name}</p>
                 <p className="text-[10px] text-[#EEAA00] font-semibold mt-0.5 flex items-center gap-1">
@@ -184,7 +222,10 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <button
                 id="btn-logout"
-                onClick={onLogout}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLogout();
+                }}
                 className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
                 title="Вийти з банкінгу"
               >
